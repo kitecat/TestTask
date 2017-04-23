@@ -3,6 +3,8 @@ package com.test.testtask;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -28,13 +30,13 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class FirstFragment extends Fragment implements AdapterView.OnItemSelectedListener {
+public class FirstFragment extends Fragment{
 
     final String baseURL = "https://translate.yandex.net/api/v1.5/tr.json/";
     final String key = "trnsl.1.1.20170322T103835Z.fc5160e6ab8ac804.e2ff9ababe88110695fd9934437dec01b767b125";
     String translatedText = "error";
     ArrayList<String> langsArrayList = new ArrayList<>();
-    Spinner fromSpinner;
+    Spinner fromSpinner, toSpinner;
 
     public static FirstFragment newInstance() {
         return new FirstFragment();
@@ -47,7 +49,6 @@ public class FirstFragment extends Fragment implements AdapterView.OnItemSelecte
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
         makeRequest(baseURL + "getLangs?key=" + key + "&ui=ru", new VolleyCallback() {
             @Override
             public void onSuccess(JSONObject result) {
@@ -70,29 +71,17 @@ public class FirstFragment extends Fragment implements AdapterView.OnItemSelecte
                 } else {
                     langsArrayList.add("error");
                 }
-                setFromSpinner();
+                setLangSetSpinners();
             }
         });
 
         View aView = inflater.inflate(R.layout.fragment_first, container, false);
+        Toolbar mActionBarToolbar = (Toolbar) aView.findViewById(R.id.toolbar);
+        ((AppCompatActivity)getActivity()).setSupportActionBar(mActionBarToolbar);
         final EditText editText = (EditText) aView.findViewById(R.id.editText);
         final TextView textView = (TextView) aView.findViewById(R.id.textView);
         fromSpinner = (Spinner) aView.findViewById(R.id.fromSpinner);
-
-//        fromSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-//            public void onItemSelected(AdapterView<?> parent, View itemSelected, int selectedItemPosition, long selectedId) {
-//                Object item = parent.getItemAtPosition(selectedItemPosition);
-//                if (item != null) {
-//                    Toast.makeText(getContext(), item.toString(),
-//                            Toast.LENGTH_SHORT).show();
-//                }
-//                Toast.makeText(getContext(), "Selected",
-//                        Toast.LENGTH_SHORT).show();
-//            }
-//
-//            public void onNothingSelected(AdapterView<?> parent) {
-//            }
-//        });
+        toSpinner = (Spinner) aView.findViewById(R.id.toSpinner);
 
         editText.addTextChangedListener(new TextWatcher() {
             public void afterTextChanged(Editable s) {}
@@ -120,44 +109,36 @@ public class FirstFragment extends Fragment implements AdapterView.OnItemSelecte
         return aView;
     }
 
-    public void onViewCreated(View aView, Bundle savedInstanceState){
-        super.onViewCreated(aView, savedInstanceState);
-
-        Spinner toSpinner = (Spinner) aView.findViewById(R.id.toSpinner);
-
-//        fromSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-//            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-//                // On selecting a spinner item
-//                String item = parent.getItemAtPosition(position).toString();
-//
-//
-//                // Showing selected spinner item
-//                Toast.makeText(parent.getContext(), "Selected: " + item, Toast.LENGTH_LONG).show();
-//            }
-//
-//            @Override
-//            public void onNothingSelected(AdapterView<?> parent) {
-//                Toast.makeText(parent.getContext(), "Nothing selected", Toast.LENGTH_LONG).show();
-//            }
-//        });
-    }
-
-    public void setFromSpinner() {
-        ArrayAdapter<String> fromSpinnerAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item, langsArrayList);
+    public void setLangSetSpinners() {
+        ArrayAdapter<String> fromSpinnerAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, langsArrayList);
         fromSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         fromSpinner.setAdapter(fromSpinnerAdapter);
         fromSpinner.setSelection(0, false);
-        fromSpinner.setOnItemSelectedListener(this);
-    }
+        fromSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                Toast.makeText(parent.getContext(), langsArrayList.get(position), Toast.LENGTH_LONG).show();
+            }
 
-    @Override
-    public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
-        Toast.makeText(getActivity(), langsArrayList.get(pos), Toast.LENGTH_LONG).show();
-    }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                Toast.makeText(parent.getContext(), "Nothing selected", Toast.LENGTH_LONG).show();
+            }
+        });
 
-    @Override
-    public void onNothingSelected(AdapterView<?> arg0) {
-        Toast.makeText(getActivity(), "Nincs kiválasztott járat", Toast.LENGTH_LONG).show();
+        ArrayAdapter<String> toSpinnerAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, langsArrayList);
+        toSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        toSpinner.setAdapter(fromSpinnerAdapter);
+        toSpinner.setSelection(0, false);
+        toSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                Toast.makeText(parent.getContext(), langsArrayList.get(position), Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                Toast.makeText(parent.getContext(), "Nothing selected", Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     public void makeRequest(String url, final VolleyCallback callback) {

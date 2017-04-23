@@ -7,15 +7,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-/**
- * Created by aytal on 22.03.17.
- */
-
 public class ThirdFragment extends Fragment {
 
     public static ThirdFragment newInstance() {
-        ThirdFragment fragment = new ThirdFragment();
-        return fragment;
+        return new ThirdFragment();
     }
 
     @Override

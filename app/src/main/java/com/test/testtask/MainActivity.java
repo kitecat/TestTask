@@ -48,5 +48,4 @@ public class MainActivity extends AppCompatActivity {
         transaction.replace(R.id.content, FirstFragment.newInstance());
         transaction.commit();
     }
-
 }
