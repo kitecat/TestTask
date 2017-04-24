@@ -199,6 +199,7 @@ public class FirstFragment extends Fragment{
         toSpinner.setSelection(langsCodesArrayList.indexOf(langTo), false);
     }
 
+    //Смена языков и запись их в SharedPrefs
     public void changeFromLang(int position) {
         langFrom = langsCodesArrayList.get(position);
         SharedPreferences.Editor editor = getActivity().getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();

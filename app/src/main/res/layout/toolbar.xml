@@ -5,7 +5,8 @@
     android:layout_height="wrap_content"
     android:theme="@style/ThemeOverlay.AppCompat.Light"
     app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-    android:layout_alignParentTop="true">
+    android:layout_alignParentTop="true"
+    app:elevation="0dp">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
