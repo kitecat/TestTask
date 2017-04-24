@@ -1,6 +1,7 @@
 package com.test.testtask;
 
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
@@ -16,7 +17,6 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -31,17 +31,20 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+import static android.content.Context.MODE_PRIVATE;
+
 public class FirstFragment extends Fragment{
 
     final String baseURL = "https://translate.yandex.net/api/v1.5/tr.json/";
     final String key = "trnsl.1.1.20170322T103835Z.fc5160e6ab8ac804.e2ff9ababe88110695fd9934437dec01b767b125";
-    String translatedText = "error", langFrom = "en", langTo = "ru";
+    String translatedText = "error", langFrom, langTo;
     ArrayList<String> langsArrayList = new ArrayList<>();
     ArrayList<String> langsCodesArrayList = new ArrayList<>();
     Spinner fromSpinner, toSpinner;
     EditText editText;
     TextView textView;
     ImageView clearEditTextButton, swapLangsButton;
+    final String PREFS_NAME = "LangsPrefsFile";
 
     public static FirstFragment newInstance() {
         return new FirstFragment();
@@ -54,6 +57,7 @@ public class FirstFragment extends Fragment{
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        //Запрос списка поддерживаемыз языков
         makeRequest(baseURL + "getLangs?key=" + key + "&ui=ru", new VolleyCallback() {
             @Override
             public void onSuccess(JSONObject result) {
@@ -94,13 +98,22 @@ public class FirstFragment extends Fragment{
         });
 
         View aView = inflater.inflate(R.layout.fragment_first, container, false);
+
+        //Считываем последние использованные языки
+        SharedPreferences prefs = getActivity().getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        langFrom = prefs.getString("langFrom", "en");
+        langTo = prefs.getString("langTo", "ru");
+
+        //Тулбар
         Toolbar mActionBarToolbar = (Toolbar) aView.findViewById(R.id.toolbar);
         ((AppCompatActivity)getActivity()).setSupportActionBar(mActionBarToolbar);
+
         editText = (EditText) aView.findViewById(R.id.editText);
         textView = (TextView) aView.findViewById(R.id.textView);
         fromSpinner = (Spinner) aView.findViewById(R.id.fromSpinner);
         toSpinner = (Spinner) aView.findViewById(R.id.toSpinner);
 
+        //Инициализация кнопки для очистки поля ввода
         clearEditTextButton = (ImageView) aView.findViewById(R.id.clearEditTextButton);
         clearEditTextButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -109,18 +122,19 @@ public class FirstFragment extends Fragment{
             }
         });
 
+        //Инициализация кнопки для смены местами языков
         swapLangsButton = (ImageView) aView.findViewById(R.id.swapLangsButton);
         swapLangsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String temp = langFrom;
-                langFrom = langTo;
-                langTo = temp;
-                fromSpinner.setSelection(langsCodesArrayList.indexOf(langFrom), false);
-                toSpinner.setSelection(langsCodesArrayList.indexOf(langTo), false);
+                changeFromLang(langsCodesArrayList.indexOf(langTo));
+                changeToLang(langsCodesArrayList.indexOf(temp));
+                setSpinnersToLangs();
             }
         });
 
+        //onTextChanged листенер для быстрого перевода
         editText.addTextChangedListener(new TextWatcher() {
             public void afterTextChanged(Editable s) {}
 
@@ -147,6 +161,7 @@ public class FirstFragment extends Fragment{
         return aView;
     }
 
+    //Инициализация спиннеров выбора языка
     public void setLangSetSpinners() {
         ArrayAdapter<String> fromSpinnerAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_item, langsArrayList);
         fromSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -175,18 +190,30 @@ public class FirstFragment extends Fragment{
             public void onNothingSelected(AdapterView<?> parent) {
             }
         });
+        setSpinnersToLangs();
+    }
+
+    //"обновление" положения выбранного итема для спиннеров
+    public void setSpinnersToLangs() {
+        fromSpinner.setSelection(langsCodesArrayList.indexOf(langFrom), false);
+        toSpinner.setSelection(langsCodesArrayList.indexOf(langTo), false);
     }
 
     public void changeFromLang(int position) {
         langFrom = langsCodesArrayList.get(position);
-        Toast.makeText(getActivity(), langFrom, Toast.LENGTH_LONG).show();
+        SharedPreferences.Editor editor = getActivity().getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
+        editor.putString("langFrom", langFrom);
+        editor.apply();
     }
 
     public void changeToLang(int position) {
         langTo = langsCodesArrayList.get(position);
-        Toast.makeText(getActivity(), langTo, Toast.LENGTH_LONG).show();
+        SharedPreferences.Editor editor = getActivity().getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
+        editor.putString("langTo", langTo);
+        editor.apply();
     }
 
+    //Метод для volley request
     public void makeRequest(String url, final VolleyCallback callback) {
         RequestQueue queue = Volley.newRequestQueue(getActivity());
         JsonObjectRequest stringRequest = new JsonObjectRequest(Request.Method.GET, url, null,
