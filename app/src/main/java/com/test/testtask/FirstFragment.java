@@ -7,6 +7,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,6 +31,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -40,11 +43,13 @@ public class FirstFragment extends Fragment{
     String translatedText = "error", langFrom, langTo;
     ArrayList<String> langsArrayList = new ArrayList<>();
     ArrayList<String> langsCodesArrayList = new ArrayList<>();
+    List<String> tempWordsHistory;
     Spinner fromSpinner, toSpinner;
     EditText editText;
     TextView textView;
     ImageView clearEditTextButton, swapLangsButton;
     final String PREFS_NAME = "LangsPrefsFile";
+    final String HISTORY_PREFS = "HistoryPrefsFile";
 
     public static FirstFragment newInstance() {
         return new FirstFragment();
@@ -101,8 +106,8 @@ public class FirstFragment extends Fragment{
 
         //Считываем последние использованные языки
         SharedPreferences prefs = getActivity().getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        langFrom = prefs.getString("langFrom", "en");
-        langTo = prefs.getString("langTo", "ru");
+        langFrom = prefs.getString("langFrom", "ru");
+        langTo = prefs.getString("langTo", "en");
 
         //Тулбар
         Toolbar mActionBarToolbar = (Toolbar) aView.findViewById(R.id.toolbar);
@@ -151,6 +156,7 @@ public class FirstFragment extends Fragment{
                                 e.printStackTrace();
                             }
                             textView.setText(translatedText);
+                            saveTextInHistory(translatedText);
                         }
                     });
                 } else {
@@ -158,7 +164,34 @@ public class FirstFragment extends Fragment{
                 }
             }
         });
+
+        SharedPreferences historyPrefs = getActivity().getSharedPreferences(HISTORY_PREFS, MODE_PRIVATE);
+        String tempString = historyPrefs.getString("wordsHistory", null);
+        String[] wordsHistory;
+        if (!TextUtils.isEmpty(tempString)) {
+            wordsHistory = tempString.split(",");
+            tempWordsHistory = Arrays.asList(wordsHistory);
+            tempWordsHistory = new ArrayList<>(tempWordsHistory);
+        } else {
+            tempWordsHistory = new ArrayList<>();
+        }
         return aView;
+    }
+
+    public void saveTextInHistory(String translatedText) {
+
+        tempWordsHistory.add(translatedText);
+
+        String[] tempArray = new String[tempWordsHistory.size()];
+        tempWordsHistory.toArray(tempArray);
+
+        SharedPreferences.Editor editor = getActivity().getSharedPreferences(HISTORY_PREFS, MODE_PRIVATE).edit();
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < tempArray.length; i++) {
+            stringBuilder.append(tempArray[i]).append(",");
+        }
+        editor.putString("wordsHistory", stringBuilder.toString());
+        editor.apply();
     }
 
     //Инициализация спиннеров выбора языка
