@@ -4,4 +4,7 @@
     <string name="title_favorites">Избранное</string>
     <string name="title_settings">Настройки</string>
     <string name="swap">Поменять местами</string>
+    <string name="enter_the_text">Введите текст</string>
+    <string name="clear_edit_text">Очистить поле</string>
+    <string name="horizontal_line">Горизонтальная разделительная линия</string>
 </resources>

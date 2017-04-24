@@ -22,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                Fragment selectedFragment = SecondFragment.newInstance();
+                Fragment selectedFragment = FirstFragment.newInstance();
                 switch (item.getItemId()) {
                     case R.id.navigation_first:
                         selectedFragment = FirstFragment.newInstance();
