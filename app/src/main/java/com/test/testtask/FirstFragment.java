@@ -25,13 +25,15 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static android.content.Context.MODE_PRIVATE;
@@ -43,6 +45,7 @@ public class FirstFragment extends Fragment{
     String translatedText = "error", langFrom, langTo;
     ArrayList<String> langsArrayList = new ArrayList<>();
     ArrayList<String> langsCodesArrayList = new ArrayList<>();
+    List<HistoryElement> historyElementArrayList = new ArrayList<>();
     List<String> tempWordsHistory;
     Spinner fromSpinner, toSpinner;
     EditText editText;
@@ -147,7 +150,8 @@ public class FirstFragment extends Fragment{
 
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (s.length() != 0) {
-                    makeRequest(baseURL + "translate?key=" + key + "&text=" + s.toString().replace(" ", "+") + "&lang="+ langFrom + "-" + langTo, new VolleyCallback() {
+                    final String textToTranslate = s.toString().replace(" ", "+");
+                    makeRequest(baseURL + "translate?key=" + key + "&text=" + textToTranslate + "&lang="+ langFrom + "-" + langTo, new VolleyCallback() {
                         @Override
                         public void onSuccess(JSONObject result) {
                             try {
@@ -156,7 +160,7 @@ public class FirstFragment extends Fragment{
                                 e.printStackTrace();
                             }
                             textView.setText(translatedText);
-                            saveTextInHistory(translatedText);
+                            saveTextInHistory(textToTranslate, translatedText);
                         }
                     });
                 } else {
@@ -167,30 +171,26 @@ public class FirstFragment extends Fragment{
 
         SharedPreferences historyPrefs = getActivity().getSharedPreferences(HISTORY_PREFS, MODE_PRIVATE);
         String tempString = historyPrefs.getString("wordsHistory", null);
-        String[] wordsHistory;
+        Gson gson = new Gson();
+        Type type = new TypeToken<List<HistoryElement>>(){}.getType();
+
         if (!TextUtils.isEmpty(tempString)) {
-            wordsHistory = tempString.split(",");
-            tempWordsHistory = Arrays.asList(wordsHistory);
-            tempWordsHistory = new ArrayList<>(tempWordsHistory);
+            historyElementArrayList = gson.fromJson(tempString, type);
         } else {
-            tempWordsHistory = new ArrayList<>();
+            historyElementArrayList = new ArrayList<>();
         }
+
         return aView;
     }
 
-    public void saveTextInHistory(String translatedText) {
+    public void saveTextInHistory(String textToTranslate, String translatedText) {
 
-        tempWordsHistory.add(translatedText);
+        historyElementArrayList.add(new HistoryElement(textToTranslate, translatedText, langFrom, langTo));
 
-        String[] tempArray = new String[tempWordsHistory.size()];
-        tempWordsHistory.toArray(tempArray);
-
+        Gson gson = new Gson();
+        String tempString = gson.toJson(historyElementArrayList);
         SharedPreferences.Editor editor = getActivity().getSharedPreferences(HISTORY_PREFS, MODE_PRIVATE).edit();
-        StringBuilder stringBuilder = new StringBuilder();
-        for (int i = 0; i < tempArray.length; i++) {
-            stringBuilder.append(tempArray[i]).append(",");
-        }
-        editor.putString("wordsHistory", stringBuilder.toString());
+        editor.putString("wordsHistory", tempString);
         editor.apply();
     }
 
